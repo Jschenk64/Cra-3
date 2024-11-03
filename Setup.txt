@@ -1,0 +1,9 @@
+main.tf holds the main resources.
+variables.tf defines the variables.
+cra3.tfvars provides variable values for terraform apply -var-file="cra3.tfvars".
+
+Let's split your configuration into three files:
+-----------------------------------------------
+main.tf: This file will contain the main resource configurations for the VPC, subnets, route tables, internet gateway, security groups, instances, load balancer, and target group.
+variables.tf: This file will define all the input variables, making the configuration more modular and customizable.
+cra3.tfvars: This file will contain the values for the variables defined in variables.tf.
