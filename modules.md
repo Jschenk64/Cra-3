@@ -1,21 +1,37 @@
-# Modules
+This Terraform script sets up a Virtual Private Cloud (VPC) infrastructure on AWS with both public and private subnets, an internet gateway, NAT gateway, route tables, and a security group. Here’s a breakdown of each resource and its purpose:
 
-The advantage of using Terraform modules in your infrastructure as code (IaC) projects lies in improved organization, reusability, and maintainability. Here are the key benefits:
+VPC (aws_vpc.cra_3_vpc):
 
-1. **Modularity**: Terraform modules allow you to break down your infrastructure configuration into smaller, self-contained components. This modularity makes it easier to manage and reason about your infrastructure because each module handles a specific piece of functionality, such as an EC2 instance, a database, or a network configuration.
+Creates a VPC with a CIDR block defined by var.vpc_cidr.
+DNS support and hostnames are enabled for the VPC.
+Public Subnets (aws_subnet.cra_3_pub1 and aws_subnet.cra_3_pub2):
 
-2. **Reusability**: With modules, you can create reusable templates for common infrastructure components. Instead of rewriting similar configurations for multiple projects, you can reuse modules across different Terraform projects. This reduces duplication and promotes consistency in your infrastructure.
+Two public subnets are created within the VPC, each in a different availability zone.
+map_public_ip_on_launch is set to true to automatically assign public IPs to instances launched in these subnets.
+Private Subnets (aws_subnet.cra_3_priv1 and aws_subnet.cra_3_priv2):
 
-3. **Simplified Collaboration**: Modules make it easier for teams to collaborate on infrastructure projects. Different team members can work on separate modules independently, and then these modules can be combined to build complex infrastructure deployments. This division of labor can streamline development and reduce conflicts in the codebase.
+Two private subnets are also created in separate availability zones, without public IPs on instances.
+Internet Gateway (aws_internet_gateway.cra_3_igw):
 
-4. **Versioning and Maintenance**: Modules can have their own versioning, making it easier to manage updates and changes. When you update a module, you can increment its version, and other projects using that module can choose when to adopt the new version, helping to prevent unexpected changes in existing deployments.
+Provides internet connectivity for resources in public subnets.
+Public Route Table (aws_route_table.cra_3_pub_rt):
 
-5. **Abstraction**: Modules can abstract away the complexity of underlying resources. For example, an EC2 instance module can hide the details of security groups, subnets, and other configurations, allowing users to focus on high-level parameters like instance type and image ID.
+Contains a route that directs traffic with a destination CIDR of 0.0.0.0/0 to the internet gateway.
+Associated with the public subnets to give them internet access.
+Elastic IP (aws_eip.cra_3_eip):
 
-6. **Testing and Validation**: Modules can be individually tested and validated, ensuring that they work correctly before being used in multiple projects. This reduces the risk of errors propagating across your infrastructure.
+Allocates an Elastic IP, which will be used by the NAT gateway.
+NAT Gateway (aws_nat_gateway.cra_3_nat_gw):
 
-7. **Documentation**: Modules promote self-documentation. When you define variables, outputs, and resource dependencies within a module, it becomes clear how the module should be used, making it easier for others (or your future self) to understand and work with.
+Allows instances in private subnets to access the internet for updates and other outbound connections while remaining inaccessible from the internet.
+Private Route Table (aws_route_table.cra_3_priv_rt):
 
-8. **Scalability**: As your infrastructure grows, modules provide a scalable approach to managing complexity. You can continue to create new modules for different components of your architecture, maintaining a clean and organized codebase.
+Contains a route to allow outbound traffic from the private subnets via the NAT gateway.
+Route Table Associations:
 
-9. **Security and Compliance**: Modules can encapsulate security and compliance best practices. For instance, you can create a module for launching EC2 instances with predefined security groups, IAM roles, and other security-related configurations, ensuring consistency and compliance across your deployments.
+Associates the public route table with the public subnets and the private route table with the private subnets.
+Security Group (aws_security_group.cra_3_sg):
+
+Allows inbound SSH (port 22) and HTTP (port 80) traffic from any IP (0.0.0.0/0).
+Allows all outbound traffic.
+Each resource is tagged based on values in var.tags for easy identification in AWS. This setup provides a basic structure for securely hosting applications in AWS with internet-facing and isolated resources.
