@@ -1,0 +1,10 @@
+vpc_cidr_block           = "10.150.0.0/16"
+instance_tenancy         = "default"
+enable_dns_support       = true
+enable_dns_hostnames     = true
+public_subnet_cidr_blocks = ["10.150.10.0/24", "10.150.11.0/24"]
+private_subnet_cidr_blocks = ["10.150.12.0/24", "10.150.13.0/24"]
+availability_zones       = ["eu-central-1a", "eu-central-1b"]
+internet_gateway_name    = "Cra-3-IGW"
+public_route_table_name  = "Cra-3_Pub_RT"
+private_route_table_name = "Cra-3_Priv_RT"
