@@ -139,8 +139,7 @@ resource "aws_security_group" "cra_3_sg" {
 }
 
 resource "aws_eip" "cra_3_eip" {
-  vpc = true
-
+  
   tags = {
     Name = var.tags["eip"]
   }
