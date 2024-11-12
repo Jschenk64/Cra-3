@@ -127,16 +127,16 @@ resource "aws_security_group" "cra_3_sg" {
   description = "Allow SSH, HTTP inbound Traffic"
   vpc_id      = aws_vpc.cra_3_vpc.id
 
-  egress {
-    description = "SSH"
+  ingress {
+    description = "Allow SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  egress {
-    description = "HTTP"
+  ingress {
+    description = "Allow HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -144,6 +144,7 @@ resource "aws_security_group" "cra_3_sg" {
   }
 
   egress {
+    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
