@@ -70,6 +70,23 @@ resource "aws_route_table" "cra_3_pub_rt" {
   tags = {
     Name = var.tags["pub_rt"]
   }
+
+}
+
+resource "aws_eip" "cra_3_eip" {
+  
+  tags = {
+    Name = var.tags["eip"]
+  }
+}
+
+resource "aws_nat_gateway" "cra_3_nat_gw" {
+  allocation_id = aws_eip.cra_3_eip.id
+  subnet_id     = aws_subnet.cra_3_pub1.id
+
+  tags = {
+    Name = var.tags["nat_gw"]
+  }
 }
 
 resource "aws_route_table" "cra_3_priv_rt" {
@@ -77,7 +94,7 @@ resource "aws_route_table" "cra_3_priv_rt" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.cra_3_igw.id
+    nat_gateway_id = aws_nat_gateway.cra_3_nat_gw.id
   }
 
   tags = {
@@ -138,18 +155,3 @@ resource "aws_security_group" "cra_3_sg" {
   }
 }
 
-resource "aws_eip" "cra_3_eip" {
-  
-  tags = {
-    Name = var.tags["eip"]
-  }
-}
-
-resource "aws_nat_gateway" "cra_3_nat_gw" {
-  allocation_id = aws_eip.cra_3_eip.id
-  subnet_id     = aws_subnet.cra_3_pub1.id
-
-  tags = {
-    Name = var.tags["nat_gw"]
-  }
-}
