@@ -18,20 +18,19 @@ pipeline {
             }
         }
 
-        stage('Check for .tfvars Changes') {
+        stage('Check for cra-3.tfvars Changes') {
             steps {
                 script {
-                    // Log the changed files for debugging
                     def changedFiles = sh(script: "git diff --name-only origin/main", returnStdout: true).trim()
                     echo "Changed files:\n${changedFiles}"
                     
-                    // Set environment variable if .tfvars files were modified
-                    if (changedFiles.contains(".tfvars")) {
+                    // Check specifically for cra-3.tfvars
+                    if (changedFiles.contains("cra-3.tfvars")) {
                         env.TF_VARS_CHANGED = "true"
-                        echo ".tfvars changes detected"
+                        echo "cra-3.tfvars changes detected"
                     } else {
                         env.TF_VARS_CHANGED = "false"
-                        echo "No .tfvars changes detected"
+                        echo "No cra-3.tfvars changes detected"
                     }
                 }
             }
@@ -52,7 +51,7 @@ pipeline {
             }
             steps {
                 echo "Terraform action is --> ${params.action}"
-                sh "terraform ${params.action} --auto-approve"
+                sh "terraform ${params.action} -var-file=cra-3.tfvars --auto-approve"
             }
         }
     }
