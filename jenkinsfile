@@ -8,6 +8,7 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')   
         AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key') 
+        TF_VARS_CHANGED = "false"
     }
 
     stages {
@@ -20,11 +21,17 @@ pipeline {
         stage('Check for .tfvars Changes') {
             steps {
                 script {
+                    // Log the changed files for debugging
                     def changedFiles = sh(script: "git diff --name-only origin/main", returnStdout: true).trim()
+                    echo "Changed files:\n${changedFiles}"
+                    
+                    // Set environment variable if .tfvars files were modified
                     if (changedFiles.contains(".tfvars")) {
                         env.TF_VARS_CHANGED = "true"
+                        echo ".tfvars changes detected"
                     } else {
                         env.TF_VARS_CHANGED = "false"
+                        echo "No .tfvars changes detected"
                     }
                 }
             }
