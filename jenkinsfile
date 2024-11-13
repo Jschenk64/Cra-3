@@ -8,52 +8,40 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')   
         AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key') 
-        TF_VARS_CHANGED = "false"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout and fetch all updates
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [[$class: 'CleanBeforeCheckout']], userRemoteConfigs: [[url: 'https://github.com/Jschenk64/Cra-3.git']]])
-                sh 'git fetch --all'
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Jschenk64/Cra-3.git']]])
             }
         }
 
-        stage('Check for cra-3.tfvars Changes') {
+        stage('Check for Changes in cra-3.tfvars') {
             steps {
                 script {
-                    // Compare with the latest commit on origin/main
-                    def changedFiles = sh(script: "git diff --name-only origin/main | grep 'cra-3.tfvars' || true", returnStdout: true).trim()
-                    echo "Changed files:\n${changedFiles}"
-                    
-                    if (changedFiles.contains("cra-3.tfvars")) {
-                        env.TF_VARS_CHANGED = "true"
-                        echo "cra-3.tfvars changes detected"
+                    def changes = sh(script: "git diff --name-only HEAD~1 HEAD | grep 'cra-3.tfvars' || true", returnStdout: true).trim()
+                    if (changes == '') {
+                        echo 'No changes in cra-3.tfvars. Skipping Terraform apply.'
+                        currentBuild.result = 'SUCCESS'
+                        error('Build stopped due to no changes in cra-3.tfvars')
                     } else {
-                        env.TF_VARS_CHANGED = "false"
-                        echo "No cra-3.tfvars changes detected"
+                        echo 'Changes detected in cra-3.tfvars. Proceeding with Terraform apply.'
                     }
                 }
             }
         }
 
         stage('Terraform Init') {
-            when {
-                expression { env.TF_VARS_CHANGED == "true" }
-            }
             steps {
                 sh 'terraform init'
             }
         }
 
         stage('Terraform Action') {
-            when {
-                expression { env.TF_VARS_CHANGED == "true" }
-            }
             steps {
                 echo "Terraform action is --> ${params.action}"
-                sh "terraform ${params.action} -var-file=cra-3.tfvars --auto-approve"
+                sh "terraform ${params.action} --auto-approve"
             }
         }
     }
