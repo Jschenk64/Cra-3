@@ -21,10 +21,11 @@ pipeline {
         stage('Check for cra-3.tfvars Changes') {
             steps {
                 script {
-                    def changedFiles = sh(script: "git diff --name-only origin/main", returnStdout: true).trim()
-                    echo "Changed files:\n${changedFiles}"
+                    // Check the last 5 commits to see if cra-3.tfvars was changed
+                    def changedFiles = sh(script: "git log -n 5 --pretty=format: --name-only | grep 'cra-3.tfvars' || true", returnStdout: true).trim()
+                    echo "Changed files (last 5 commits):\n${changedFiles}"
                     
-                    // Check specifically for cra-3.tfvars
+                    // Check specifically for cra-3.tfvars in the recent commits
                     if (changedFiles.contains("cra-3.tfvars")) {
                         env.TF_VARS_CHANGED = "true"
                         echo "cra-3.tfvars changes detected"
