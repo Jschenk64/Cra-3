@@ -13,14 +13,14 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Jschenk64/Cra-3.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [[$class: 'CleanBeforeCheckout']], userRemoteConfigs: [[url: 'https://github.com/Jschenk64/Cra-3.git']]])
             }
         }
 
         stage('Check for .tfvars Changes') {
             steps {
                 script {
-                    def changedFiles = sh(script: "git diff --name-only HEAD~1 HEAD", returnStdout: true).trim()
+                    def changedFiles = sh(script: "git diff --name-only origin/main", returnStdout: true).trim()
                     if (changedFiles.contains(".tfvars")) {
                         env.TF_VARS_CHANGED = "true"
                     } else {
