@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'action', defaultValue: 'apply', description: 'Terraform action to execute (apply or destroy)')
+    }
+
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')   
+        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key') 
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Jschenk64/Cra-3.git']]])
+            }
+        }
+
+        stage('Check for .tfvars Changes') {
+            steps {
+                script {
+                    def changedFiles = sh(script: "git diff --name-only HEAD~1 HEAD", returnStdout: true).trim()
+                    if (changedFiles.contains(".tfvars")) {
+                        env.TF_VARS_CHANGED = "true"
+                    } else {
+                        env.TF_VARS_CHANGED = "false"
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Init') {
+            when {
+                expression { env.TF_VARS_CHANGED == "true" }
+            }
+            steps {
+                sh 'terraform init'
+            }
+        }
+
+        stage('Terraform Action') {
+            when {
+                expression { env.TF_VARS_CHANGED == "true" }
+            }
+            steps {
+                echo "Terraform action is --> ${params.action}"
+                sh "terraform ${params.action} --auto-approve"
+            }
+        }
+    }
+}
