@@ -13,20 +13,24 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Jschenk64/Cra-3.git']]])
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: '*/main']], 
+                    extensions: [], 
+                    userRemoteConfigs: [[url: 'https://github.com/Jschenk64/Cra-3.git']]
+                ])
             }
         }
 
         stage('Check for Changes in cra-3.tfvars') {
             steps {
                 script {
-                    def changes = sh(script: "git diff --name-only HEAD~1 HEAD | grep 'cra-3.tfvars' || true", returnStdout: true).trim()
-                    if (changes == '') {
-                        echo 'No changes in cra-3.tfvars. Skipping Terraform apply.'
-                        currentBuild.result = 'SUCCESS'
-                        error('Build stopped due to no changes in cra-3.tfvars')
+                    def changes = sh(script: "git diff --name-only HEAD~1 HEAD | grep cra-3.tfvars || true", returnStdout: true).trim()
+                    if (changes) {
+                        echo "Changes detected in cra-3.tfvars. Proceeding with Terraform apply."
                     } else {
-                        echo 'Changes detected in cra-3.tfvars. Proceeding with Terraform apply.'
+                        echo "No changes in cra-3.tfvars. Skipping Terraform apply."
+                        currentBuild.result = 'SUCCESS' // Ensure the pipeline doesn't fail.
+                        return
                     }
                 }
             }
