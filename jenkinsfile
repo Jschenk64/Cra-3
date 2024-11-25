@@ -13,26 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM', 
-                    branches: [[name: '*/main']], 
-                    extensions: [], 
-                    userRemoteConfigs: [[url: 'https://github.com/Jschenk64/Cra-3.git']]
-                ])
-            }
-        }
-
-        stage('Check for Changes in cra-3.tfvars') {
-            steps {
-                script {
-                    def changes = sh(script: "git diff --name-only HEAD~1 HEAD | grep cra-3.tfvars || true", returnStdout: true).trim()
-                    if (changes) {
-                        echo "Changes detected in cra-3.tfvars. Proceeding with Terraform apply."
-                    } else {
-                        echo "No changes in cra-3.tfvars. Skipping Terraform apply."
-                        currentBuild.result = 'SUCCESS' // Ensure the pipeline doesn't fail.
-                        return
-                    }
-                }
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Jschenk64/Cra-3.git']]])
             }
         }
 
@@ -42,10 +23,24 @@ pipeline {
             }
         }
 
-        stage('Terraform Action') {
+        stage('Terraform Plan') {
             steps {
-                echo "Terraform action is --> ${params.action}"
-                sh "terraform ${params.action} --auto-approve"
+                sh 'terraform plan -var-file=cra-3.tfvars'
+            }
+        }
+
+        stage('Terraform Apply or Destroy') {
+            when {
+                expression { return params.action == 'apply' || params.action == 'destroy' }
+            }
+            steps {
+                script {
+                    if (params.action == 'apply') {
+                        sh 'terraform apply -var-file=cra-3.tfvars -auto-approve'
+                    } else if (params.action == 'destroy') {
+                        sh 'terraform destroy -var-file=cra-3.tfvars -auto-approve'
+                    }
+                }
             }
         }
     }
